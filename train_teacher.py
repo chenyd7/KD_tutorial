@@ -161,3 +161,44 @@ plt.plot(np.arange(1,epochs+1), accv)
 plt.title('validation accuracy')
 plt.savefig('./acc.jpg')
 plt.clf()
+
+# define the visualization function
+def vis_mnist(model, correct_tensor, wrong_tensor):
+    model.eval()
+    correct_count = 0 
+    wrong_count = 0 
+    for data, target in validation_loader:
+        data = data.to(device)
+        target = target.to(device)
+        fea, output = model(data)
+        pred = output.data.max(1)[1] # get the index of the max log-probability
+        #correct += pred.eq(target.data).cpu().sum()
+        for i in range(0, data.size(0)):
+            if (correct_count < correct_tensor.size(0)) and (pred[i] == target[i]): 
+                correct_tensor[correct_count] = data[i]
+                correct_count = correct_count + 1
+            elif (wrong_count < wrong_tensor.size(0)) and (pred[i] != target[i]): 
+                wrong_tensor[wrong_count] = data[i]
+                wrong_count = wrong_count + 1
+        if (correct_count == correct_tensor.size(0)) and (wrong_count == wrong_tensor.size(0)):
+            break
+
+correct_t = torch.zeros(10, 1, 28, 28)
+wrong_t = torch.zeros(10, 1, 28, 28)
+vis_mnist(model_t, correct_t, wrong_t)
+
+# plot correctly-classified images on MNIST
+for i in range(10):
+    plt.subplot(1,10,i+1)
+    plt.axis('off')
+    plt.imshow(correct_t[i,:,:,:].numpy().reshape(28,28), cmap="gray_r")
+plt.savefig('./correct.jpg')
+plt.clf()
+
+# plot incorrectly-classified images on MNIST
+for i in range(10):
+    plt.subplot(1,10,i+1)
+    plt.axis('off')
+    plt.imshow(wrong_t[i,:,:,:].numpy().reshape(28,28), cmap="gray_r")
+plt.savefig('./wrong.jpg')
+plt.clf()
